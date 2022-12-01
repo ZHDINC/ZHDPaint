@@ -3,6 +3,8 @@
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
+LRESULT CALLBACK ColorPaletteWndProc(HWND, UINT, WPARAM, LPARAM);
+
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine, int iCmdShow)
 {
 	WNDCLASS wndclass = { };
@@ -20,6 +22,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 
 	RegisterClass(&wndclass);
 	
+	wndclass.lpszClassName = L"Color Palette";
+	wndclass.hIcon = nullptr;
+	wndclass.lpfnWndProc = ColorPaletteWndProc;
+	RegisterClass(&wndclass);
+
 	HWND hwnd = CreateWindow(wndclass.lpszClassName, L"My Windows App", WS_OVERLAPPEDWINDOW, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, nullptr, nullptr, hInstance, nullptr);
 
 	ShowWindow(hwnd, iCmdShow);
@@ -35,18 +42,37 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
-	static ColorPalette colorPalette;
+	static HWND hwndColorPalette;
 	HDC hdc;
 	PAINTSTRUCT ps;
 	switch (message)
 	{
+	case WM_CREATE:
+		hwndColorPalette = CreateWindow(L"Color Palette", nullptr, WS_CHILDWINDOW | WS_VISIBLE, 0, 0, 0, 0, hwnd, nullptr, (HINSTANCE)GetWindowLong(hwnd, GWL_HINSTANCE), nullptr);
+		return 0;
 	case WM_PAINT:
 		hdc = BeginPaint(hwnd, &ps);
-		colorPalette.DrawColorPalette(hdc, 500, 0, 700, 200);
 		EndPaint(hwnd ,&ps);
 		return 0;
 	case WM_CLOSE:
 		PostQuitMessage(0);
+		return 0;
+	}
+	return DefWindowProc(hwnd, message, wparam, lparam);
+}
+
+LRESULT CALLBACK ColorPaletteWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
+{
+	static ColorPalette colorpalette;
+	HDC hdc;
+	PAINTSTRUCT ps;
+	RECT rect;
+	switch (message)
+	{
+	case WM_PAINT:
+		hdc = BeginPaint(hwnd, &ps);
+		colorpalette.DrawColorPalette(hdc, 0, 0, 200, 200);
+		EndPaint(hwnd, &ps);
 		return 0;
 	}
 	return DefWindowProc(hwnd, message, wparam, lparam);
