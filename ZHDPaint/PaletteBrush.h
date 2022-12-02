@@ -4,15 +4,13 @@
 class PaletteBrush
 {
 	COLORREF color;
-	bool isActive;
 public:
-	PaletteBrush(COLORREF color, bool isActive)
-		: color{ color }, isActive{ isActive }
+	PaletteBrush(COLORREF color)
+		: color{ color }
 	{
 
 	}
-	void SetActive() { isActive = true; }
-	void SetInactive() { isActive = false; }
+	PaletteBrush() { };
 	COLORREF GetPaletteBrush() { return color; }
-	bool GetState() { return isActive; }
+	void SetPaletteBrush(COLORREF sentColor) { color = sentColor; }
 };
