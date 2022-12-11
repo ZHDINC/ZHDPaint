@@ -3,17 +3,17 @@
 #include<vector>
 #include"ColorPalette.h"
 
-constexpr int WM_COLORBRUSH = 0x0801;
-constexpr int WM_GETCOLORBRUSH = 0x0802;
-constexpr int WM_SENDCOLORBRUSH = 0x0803;
-constexpr int BTN_LINE = 1050;
-constexpr int BTN_RECT = 1051;
-constexpr int BTN_ELLIPSE = 1052;
-constexpr int BTN_SQBRUSH = 1055;
-constexpr int BTN_CIRBRUSH = 1056;
-constexpr int BTN_FILLORNOT = 1500;
-constexpr int BTN_DECREASESIZE = 1053;
-constexpr int BTN_INCREASESIZE = 1054;
+constexpr int WM_COLORBRUSH = 0x0801,
+ 			WM_GETCOLORBRUSH = 0x0802,
+ 			WM_SENDCOLORBRUSH = 0x0803,
+ 			BTN_LINE = 1050,
+ 			BTN_RECT = 1051,
+ 			BTN_ELLIPSE = 1052,
+ 			BTN_SQBRUSH = 1055,
+ 			BTN_CIRBRUSH = 1056,
+ 			BTN_FILLORNOT = 1500,
+ 			BTN_DECREASESIZE = 1053,
+ 			BTN_INCREASESIZE = 1054;
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
