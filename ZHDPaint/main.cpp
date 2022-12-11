@@ -33,7 +33,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 	wndclass.lpszMenuName = nullptr;
 	wndclass.cbClsExtra = 0;
 	wndclass.cbWndExtra = 0;
-	wndclass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
+	wndclass.hbrBackground = (HBRUSH)GetStockObject(GRAY_BRUSH);
 	wndclass.style = CS_HREDRAW | CS_VREDRAW;
 
 	RegisterClass(&wndclass);
@@ -73,12 +73,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 //
 //}
 
+bool DetermineIfValidDrawCall(LPARAM lparam, RECT rect)
+{
+	if (!(LOWORD(lparam) > rect.left) && LOWORD(lparam) < rect.right) return false;
+	if (!(HIWORD(lparam) > rect.top && HIWORD(lparam) < rect.bottom)) return false;
+	return true;
+}
+
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
 	static HWND hwndColorPalette;
 	HDC hdc;
 	PAINTSTRUCT ps;
 	HRGN hrgnColorPalette;
+	static constexpr int drawingClientRectTopBorder = 125, drawingClientRectLeftBorder = 5;
+	static int drawingClientRectRightBorder, drawingClientRectBottomBorder;
 	static HWND fillOrNotCheckBox;
 	static HPEN hpen;
 	static HBRUSH hbrush;
@@ -88,11 +97,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	static int brushSize = 1;
 	static bool drawing = false;
 	RECT drawingBrush;
+	static RECT drawingClientRect;
 	POINT p;
 	switch (message)
 	{
 	case WM_CREATE:
-		
+		currentX = drawingClientRectLeftBorder;
+		currentY = drawingClientRectTopBorder;
 		hpen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
 		hbrush = CreateSolidBrush(RGB(255, 0, 0));
 		hdc = GetDC(hwnd);
@@ -110,6 +121,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		
 		/*hrgnColorPalette = CreateRectRgn(500, 0, 700, 100);
 		SetWindowRgn(hwndColorPalette, hrgnColorPalette, true);*/
+		return 0;
+	case WM_SIZE:
+		drawingClientRectRightBorder = LOWORD(lparam) - 5;
+		drawingClientRectBottomBorder = HIWORD(lparam) - 5;
+		drawingClientRect.top = drawingClientRectTopBorder;
+		drawingClientRect.left = drawingClientRectLeftBorder;
+		drawingClientRect.right = drawingClientRectRightBorder;
+		drawingClientRect.bottom = drawingClientRectBottomBorder;
+		hdc = GetDC(hwnd);
+		FillRect(hdc, &drawingClientRect, (HBRUSH)GetStockObject(WHITE_BRUSH));
+		ReleaseDC(hwnd, hdc);
 		return 0;
 	case WM_PAINT:
 		hdc = BeginPaint(hwnd, &ps);
@@ -135,10 +157,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		}
 		return 0;
 	case WM_LBUTTONDOWN:
+		if(!DetermineIfValidDrawCall(lparam, drawingClientRect)) return 0;
 		currentX = LOWORD(lparam);
 		currentY = HIWORD(lparam);
 		return 0;
 	case WM_MOUSEMOVE:
+		if (!DetermineIfValidDrawCall(lparam, drawingClientRect)) return 0;
 		if (!drawing) return 0;
 		hdc = GetDC(hwnd);
 		if (wparam & MK_LBUTTON)
@@ -164,6 +188,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		ReleaseDC(hwnd, hdc);
 		return 0;
 	case WM_LBUTTONUP:
+		if (!DetermineIfValidDrawCall(lparam, drawingClientRect)) return 0;
 		hdc = GetDC(hwnd);
 		if (fillOrNot)
 		{
