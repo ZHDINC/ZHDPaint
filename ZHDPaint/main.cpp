@@ -75,8 +75,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PSTR szCmdLine,
 
 bool DetermineIfValidDrawCall(LPARAM lparam, RECT rect)
 {
-	if (!(LOWORD(lparam) > rect.left) && LOWORD(lparam) < rect.right) return false;
-	if (!(HIWORD(lparam) > rect.top && HIWORD(lparam) < rect.bottom)) return false;
+	if (!((LOWORD(lparam) > rect.left) && (LOWORD(lparam) < rect.right))) return false;
+	if (!((HIWORD(lparam) > rect.top) && (HIWORD(lparam) < rect.bottom))) return false;
 	return true;
 }
 
@@ -123,7 +123,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		SetWindowRgn(hwndColorPalette, hrgnColorPalette, true);*/
 		return 0;
 	case WM_SIZE:
-		drawingClientRectRightBorder = LOWORD(lparam) - 5;
+		drawingClientRectRightBorder = LOWORD(lparam) - 30;
 		drawingClientRectBottomBorder = HIWORD(lparam) - 5;
 		drawingClientRect.top = drawingClientRectTopBorder;
 		drawingClientRect.left = drawingClientRectLeftBorder;
