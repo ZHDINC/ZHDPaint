@@ -13,5 +13,9 @@ public:
 	{
 		return colors;
 	}
+	COLORREF GetSpecificIndex(int i)
+	{
+		return colors[i].GetPaletteBrush();
+	}
 };
 
