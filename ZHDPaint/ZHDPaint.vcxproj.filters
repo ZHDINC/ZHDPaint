@@ -29,5 +29,14 @@
     <ClInclude Include="PaletteBrush.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CanvasWndProc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Identifiers.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="ColorPaletteWndProc.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
