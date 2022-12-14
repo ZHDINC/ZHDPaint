@@ -108,16 +108,7 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 			currentTool = 2;
 			break;
 		case BTN_FILLORNOT:
-			if (!Button_GetCheck(fillOrNotCheckBox))
-			{
-				fillOrNot = true;
-				Button_SetCheck(fillOrNotCheckBox, TRUE);
-			}
-			else
-			{
-				fillOrNot = false;
-				Button_SetCheck(fillOrNotCheckBox, FALSE);
-			}
+			fillOrNot = !fillOrNot;
 			break;
 		case BTN_SQBRUSH:
 			drawing = true;

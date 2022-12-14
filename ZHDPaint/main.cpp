@@ -56,12 +56,9 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
-	static HWND hwndColorPalette, hwndCanvas;
+	static HWND hwndColorPalette, hwndCanvas, fillOrNotCheckBox;
 	HDC hdc;
 	PAINTSTRUCT ps;
-	static HWND fillOrNotCheckBox;
-	static bool drawing = false;
-	POINT p;
 	switch (message)
 	{
 	case WM_CREATE:
@@ -83,37 +80,21 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		EndPaint(hwnd ,&ps);
 		return 0;
 	case WM_SENDCOLORBRUSH:
-		SendMessage(hwndCanvas, message, wparam, lparam);
+		CanvasWndProc(hwndCanvas, message, wparam, lparam);
 		return 0;
 	case WM_COMMAND:
-		switch (LOWORD(wparam))
+		if (wparam == BTN_FILLORNOT)
 		{
-		case BTN_LINE:
-			CanvasWndProc(hwndCanvas, message, wparam, lparam);
-			break;
-		case BTN_RECT:
-			CanvasWndProc(hwndCanvas, message, wparam, lparam);
-			break;
-		case BTN_ELLIPSE:
-			CanvasWndProc(hwndCanvas, message, wparam, lparam);
-			break;
-		case BTN_FILLORNOT:
-			CanvasWndProc(hwndCanvas, message, wparam, lparam);
-			break;
-		case BTN_SQBRUSH:
-			CanvasWndProc(hwndCanvas, message, wparam, lparam);
-			break;
-		case BTN_CIRBRUSH:
-			CanvasWndProc(hwndCanvas, message, wparam, lparam);
-			break;
-
-		case BTN_INCREASESIZE:
-			CanvasWndProc(hwndCanvas, message, wparam, lparam);
-			break;
-		case BTN_DECREASESIZE:
-			CanvasWndProc(hwndCanvas, message, wparam, lparam);
-			break;
+			if (!Button_GetCheck(fillOrNotCheckBox))
+			{
+				Button_SetCheck(fillOrNotCheckBox, TRUE);
+			}
+			else
+			{
+				Button_SetCheck(fillOrNotCheckBox, FALSE);
+			}
 		}
+		CanvasWndProc(hwndCanvas, message, wparam, lparam);
 		return 0;
 	case WM_DESTROY:
 		PostQuitMessage(0);
