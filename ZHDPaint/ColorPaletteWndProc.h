@@ -22,30 +22,19 @@ LRESULT CALLBACK ColorPaletteWndProc(HWND hwnd, UINT message, WPARAM wparam, LPA
 		GetClientRect(hwnd, &rect);
 		hdc = BeginPaint(hwnd, &ps);
 		numberOfColors = colorpalette.GetColors().size();
-		for (PaletteBrush p : colorpalette.GetColors())
+		/*for (PaletteBrush p : colorpalette.GetColors())
 		{
 			hbrush = CreateSolidBrush(p.GetPaletteBrush());
 			SelectObject(hdc, hbrush);
 			Rectangle(hdc, rect.left + 50 * numberOfBrushes, rect.top, rect.right, rect.bottom);
 			numberOfBrushes++;
-		}
+		}*/
+		colorpalette.DrawColorPalette(hdc);
 		EndPaint(hwnd, &ps);
 		return 0;
 	case WM_LBUTTONDOWN:
 		parentWnd = GetParent(hwnd);
-		xValue = LOWORD(lparam);
-		if (xValue < 50)
-		{
-			SendMessage(parentWnd, WM_SENDCOLORBRUSH, 0, colorpalette.GetSpecificIndex(0));
-		}
-		else if (xValue > 50 && xValue < 100)
-		{
-			SendMessage(parentWnd, WM_SENDCOLORBRUSH, 0, colorpalette.GetSpecificIndex(1));
-		}
-		else if (xValue > 100)
-		{
-			SendMessage(parentWnd, WM_SENDCOLORBRUSH, 0, colorpalette.GetSpecificIndex(2));
-		}
+		SendMessage(parentWnd, WM_SENDCOLORBRUSH, 0, colorpalette.HitCheck(lparam).GetPaletteBrush());
 		return 0;
 	case WM_GETCOLORBRUSH:
 		return 0;

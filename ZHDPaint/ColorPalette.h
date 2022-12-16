@@ -7,9 +7,12 @@
 class ColorPalette
 {
 	std::vector<PaletteBrush> colors;
+	std::vector<POINT> points;
+	int iteration = 0, row = 0, column = 0;
 public:
 	ColorPalette();
-	void DrawColorPalette(HDC hdc, int left, int top, int right, int bottom);
+	void AddToColorPalette(COLORREF color);
+	void DrawColorPalette(HDC hdc);
 	std::vector<PaletteBrush>& GetColors()
 	{
 		return colors;
@@ -17,6 +20,23 @@ public:
 	COLORREF GetSpecificIndex(int i)
 	{
 		return colors[i].GetPaletteBrush();
+	}
+	PaletteBrush HitCheck(LPARAM lparam)
+	{
+		int x = LOWORD(lparam);
+		int y = HIWORD(lparam);
+		int loopiterator = 0;
+		for (POINT p : points)
+		{
+			if (x > p.x && x < (p.x + 25))
+			{
+				if (y > p.y && y < (p.y + 33))
+				{
+					return colors[loopiterator];
+				}
+			}
+			loopiterator++;
+		}
 	}
 };
 

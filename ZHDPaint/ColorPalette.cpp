@@ -3,29 +3,41 @@
 ColorPalette::ColorPalette()
 {
 	// For starters, creating the three primary colors with the intention to use them as brushes.
-	colors.push_back(PaletteBrush(RGB(255,0,0)));
-	colors.push_back(PaletteBrush(RGB(0, 255, 0)));
-	colors.push_back(PaletteBrush(RGB(0, 0, 255)));
+	AddToColorPalette(RGB(255, 0, 0));
+	AddToColorPalette(RGB(0, 255, 0));
+	AddToColorPalette(RGB(0, 0, 255));
 }
 
-void ColorPalette::DrawColorPalette(HDC hdc, int left, int top, int right, int bottom)
+void ColorPalette::DrawColorPalette(HDC hdc)
 {
-	/*Rectangle(hdc, left, top, right, bottom);
-	int size = (right - left) / colors.size();
-	int iteration = 0;
-	PaletteBrush currentColor{ RGB(0,0,0), false };
-	for (PaletteBrush color : colors)
+	HBRUSH hbrush = CreateSolidBrush(RGB(0, 0, 0));
+	int drawiteration = 0;
+	for (int row = 0; row < 100; row += 33)
 	{
-		HBRUSH hbrush = CreateSolidBrush(color.GetPaletteBrush());
-		SelectObject(hdc, hbrush);
-		if (color.GetState())
+		for (int column = 0; column < 200; column += 25)
 		{
-			currentColor = color;
-			HPEN hpen = CreatePen(PS_SOLID, 4, RGB(0, 0, 0));
-			SelectObject(hdc, hpen);
+			if (drawiteration < colors.size())
+			{
+				hbrush = CreateSolidBrush(colors[drawiteration].GetPaletteBrush());
+				SelectObject(hdc, hbrush);
+			}
+			
+			Rectangle(hdc, column, row, column + 25, row + 33);
+			SelectObject(hdc, (HBRUSH)GetStockObject(WHITE_BRUSH));
+			drawiteration++;
 		}
-		Rectangle(hdc, left + size * iteration, top, right, bottom);
-		iteration++;
-		SelectObject(hdc, (HPEN)GetStockObject(BLACK_PEN));
-	}*/
+	}
+}
+
+void ColorPalette::AddToColorPalette(COLORREF color)
+{
+	colors.push_back(color);
+	if (iteration % 8 == 0 && iteration != 0)
+	{
+		row += 33;
+		column = 0;
+	}
+	points.push_back(POINT{ column, row });
+	column += 25;
+	iteration++;
 }
