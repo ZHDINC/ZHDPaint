@@ -7,6 +7,7 @@
 #include"ColorPaletteWndProc.h"
 #include"CanvasWndProc.h"
 #include<string>
+#include<exception>
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -57,17 +58,23 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
-	static HWND hwndColorPalette, hwndCanvas, fillOrNotCheckBox;
+	static HWND hwndColorPalette, hwndCanvas, fillOrNotCheckBox, hwndXSize, hwndYSize;
 	HDC hdc;
 	PAINTSTRUCT ps;
-	static int canvasX = 0, canvasY = 0;
+	static int canvasX = 0, canvasY = 0, canvasWidth = 1000, canvasHeight = 600, newWidth = 0, newHeight = 0;
 	static RECT coordinatesRect;
 	static std::wstring coordinatesString;
+	static RECT canvasRect;
+	static bool newSize = false;
+	wchar_t sXBuffer[20], sYBuffer[20];
+	int countXBuffer, countYBuffer;
+	std::wstring textXSize, textYSize;
+	LPARAM resizingLparam;
 	switch (message)
 	{
 	case WM_CREATE:
 		hwndColorPalette = CreateWindow(L"Color Palette", nullptr, WS_CHILD | WS_VISIBLE, 500, 0, 200, 100, hwnd, (HMENU)1000, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), nullptr);
-		hwndCanvas = CreateWindow(L"Canvas", nullptr, WS_CHILD | WS_VISIBLE, 5, 125, 1000, 600, hwnd, (HMENU)CANVAS, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), nullptr);
+		hwndCanvas = CreateWindow(L"Canvas", nullptr, WS_CHILD | WS_VISIBLE, 5, 125, canvasWidth, canvasHeight, hwnd, (HMENU)CANVAS, (HINSTANCE)GetWindowLongPtr(hwnd, GWLP_HINSTANCE), nullptr);
 		CreateWindow(L"BUTTON", L"Line", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 10, 10, 50, 50, hwnd, (HMENU)BTN_LINE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
 		CreateWindow(L"BUTTON", L"Rectangle", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 60, 10, 100, 50, hwnd, (HMENU)BTN_RECT, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
 		CreateWindow(L"BUTTON", L"Ellipse", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 160, 10, 75, 50, hwnd, (HMENU)BTN_ELLIPSE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
@@ -76,6 +83,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		CreateWindow(L"Button", L"Circle Brush", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 110, 60, 100, 50, hwnd, (HMENU)BTN_CIRBRUSH, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
 		CreateWindow(L"BUTTON", L"-", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 300, 20, 50, 50, hwnd, (HMENU)BTN_DECREASESIZE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
 		CreateWindow(L"BUTTON", L"+", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 350, 20, 50, 50, hwnd, (HMENU)BTN_INCREASESIZE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
+		hwndXSize = CreateWindow(L"EDIT", nullptr, WS_CHILD | WS_VISIBLE | ES_LEFT, 800, 40, 50, 20, hwnd, (HMENU)ES_XSIZE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
+		hwndYSize = CreateWindow(L"EDIT", nullptr, WS_CHILD | WS_VISIBLE | ES_LEFT, 870, 40, 50, 20, hwnd, (HMENU)ES_YSIZE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
+		CreateWindow(L"BUTTON", L"Resize", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 920, 40, 50, 20, hwnd, (HMENU)BTN_RESIZE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
 		coordinatesRect = { 800, 20, 800 + 100, 20 + 20 };
 		return 0;
 	case WM_PAINT:
@@ -83,10 +93,32 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		TextOut(hdc, 320, 0, L"Size?", 5);
 		coordinatesString = L"(" + std::to_wstring(canvasX) + L", " + std::to_wstring(canvasY) + L")";
 		TextOut(hdc, 800, 20, coordinatesString.c_str(), coordinatesString.size());
+		TextOut(hdc, 780, 40, L"X:", 2);
+		TextOut(hdc, 850, 40, L"Y:", 2);
 		EndPaint(hwnd ,&ps);
 		return 0;
 	case WM_SENDCOLORBRUSH:
 		CanvasWndProc(hwndCanvas, message, wparam, lparam);
+		return 0;
+	case WM_MOUSEMOVE:
+		if (wparam & MK_LBUTTON)
+		{
+			GetClientRect(hwndCanvas, &canvasRect);
+			newWidth = LOWORD(lparam) + 5;
+			newHeight = HIWORD(lparam) + 125;
+			if (LOWORD(lparam) == canvasRect.right + 1)
+			{
+				newSize = true;
+			}
+			if (HIWORD(lparam) == canvasRect.bottom + 1)
+			{
+				newSize = true;
+			}
+		}
+		return 0;
+	case WM_LBUTTONUP:
+		SendMessage(hwndCanvas, WM_SIZE, 0, newWidth & newHeight);
+		newSize = false;
 		return 0;
 	case WM_CANVASMOVE:
 		canvasX = LOWORD(lparam);
@@ -94,6 +126,25 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		InvalidateRect(hwnd, &coordinatesRect, true);
 		return 0;
 	case WM_COMMAND:
+		if (wparam == BTN_RESIZE)
+		{
+			countXBuffer = SendMessage(hwndXSize, EM_GETLINE, 0, (LPARAM)sXBuffer);
+			countYBuffer = SendMessage(hwndYSize, EM_GETLINE, 0, (LPARAM)sYBuffer);
+			if (countXBuffer && countYBuffer)
+			{
+				for (int i = 0; i < countXBuffer; i++)
+				{
+					textXSize += sXBuffer[i];
+				}
+				for (int i = 0; i < countYBuffer; i++)
+				{
+					textYSize += sYBuffer[i];
+				}
+				newWidth = std::stoi(textXSize);
+				newHeight = std::stoi(textYSize);
+				MoveWindow(hwndCanvas, 5, 125, newWidth, newHeight, true);
+			}
+		}
 		if (wparam == BTN_FILLORNOT)
 		{
 			if (!Button_GetCheck(fillOrNotCheckBox))
