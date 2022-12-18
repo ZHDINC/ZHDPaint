@@ -83,8 +83,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		CreateWindow(L"Button", L"Circle Brush", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 110, 60, 100, 50, hwnd, (HMENU)BTN_CIRBRUSH, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
 		CreateWindow(L"BUTTON", L"-", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 300, 20, 50, 50, hwnd, (HMENU)BTN_DECREASESIZE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
 		CreateWindow(L"BUTTON", L"+", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 350, 20, 50, 50, hwnd, (HMENU)BTN_INCREASESIZE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
-		hwndXSize = CreateWindow(L"EDIT", nullptr, WS_CHILD | WS_VISIBLE | ES_LEFT, 800, 40, 50, 20, hwnd, (HMENU)ES_XSIZE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
-		hwndYSize = CreateWindow(L"EDIT", nullptr, WS_CHILD | WS_VISIBLE | ES_LEFT, 870, 40, 50, 20, hwnd, (HMENU)ES_YSIZE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
+		hwndXSize = CreateWindow(L"EDIT", nullptr, WS_CHILD | WS_VISIBLE | ES_LEFT | ES_NUMBER, 800, 40, 50, 20, hwnd, (HMENU)ES_XSIZE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
+		hwndYSize = CreateWindow(L"EDIT", nullptr, WS_CHILD | WS_VISIBLE | ES_LEFT | ES_NUMBER, 870, 40, 50, 20, hwnd, (HMENU)ES_YSIZE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
 		CreateWindow(L"BUTTON", L"Resize", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 920, 40, 50, 20, hwnd, (HMENU)BTN_RESIZE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
 		coordinatesRect = { 800, 20, 800 + 100, 20 + 20 };
 		return 0;
