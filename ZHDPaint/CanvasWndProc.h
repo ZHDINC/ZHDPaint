@@ -13,7 +13,7 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 	static int currentTool = 0;
 	static bool fillOrNot = false;
 	static int brushSize = 1;
-	static HWND fillOrNotCheckBox;
+	static HWND fillOrNotCheckBox, parentWnd;
 	RECT drawingBrush;
 	RECT rect;
 	static int currentX, currentY;
@@ -26,6 +26,8 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 		SelectObject(hdc, hpen);
 		ReleaseDC(hwnd, hdc);
 	case WM_MOUSEMOVE:
+		parentWnd = GetParent(hwnd);
+		SendMessage(parentWnd, WM_CANVASMOVE, 0, lparam);
 		if (!drawing) return 0;
 		hdc = GetDC(hwnd);
 		if (wparam & MK_LBUTTON)

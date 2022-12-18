@@ -6,6 +6,7 @@
 #include"ColorPalette.h"
 #include"ColorPaletteWndProc.h"
 #include"CanvasWndProc.h"
+#include<string>
 
 LRESULT CALLBACK WndProc(HWND, UINT, WPARAM, LPARAM);
 
@@ -59,6 +60,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	static HWND hwndColorPalette, hwndCanvas, fillOrNotCheckBox;
 	HDC hdc;
 	PAINTSTRUCT ps;
+	static int canvasX = 0, canvasY = 0;
+	static RECT coordinatesRect;
+	static std::wstring coordinatesString;
 	switch (message)
 	{
 	case WM_CREATE:
@@ -72,15 +76,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		CreateWindow(L"Button", L"Circle Brush", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 110, 60, 100, 50, hwnd, (HMENU)BTN_CIRBRUSH, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
 		CreateWindow(L"BUTTON", L"-", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 300, 20, 50, 50, hwnd, (HMENU)BTN_DECREASESIZE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
 		CreateWindow(L"BUTTON", L"+", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 350, 20, 50, 50, hwnd, (HMENU)BTN_INCREASESIZE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
-
+		coordinatesRect = { 800, 20, 800 + 100, 20 + 20 };
 		return 0;
 	case WM_PAINT:
 		hdc = BeginPaint(hwnd, &ps);
 		TextOut(hdc, 320, 0, L"Size?", 5);
+		coordinatesString = L"(" + std::to_wstring(canvasX) + L", " + std::to_wstring(canvasY) + L")";
+		TextOut(hdc, 800, 20, coordinatesString.c_str(), coordinatesString.size());
 		EndPaint(hwnd ,&ps);
 		return 0;
 	case WM_SENDCOLORBRUSH:
 		CanvasWndProc(hwndCanvas, message, wparam, lparam);
+		return 0;
+	case WM_CANVASMOVE:
+		canvasX = LOWORD(lparam);
+		canvasY = HIWORD(lparam);
+		InvalidateRect(hwnd, &coordinatesRect, true);
 		return 0;
 	case WM_COMMAND:
 		if (wparam == BTN_FILLORNOT)
