@@ -4,8 +4,11 @@
 
 LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
+	static HDC hdcInMemory;
 	static HPEN hpen;
 	static HBRUSH hbrush;
+	static HBITMAP hbitmap;
+	BITMAP bitmap;
 	HDC hdc;
 	PAINTSTRUCT ps;
 	static bool drawing = false;
@@ -14,16 +17,21 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 	static bool fillOrNot = false;
 	static int brushSize = 1;
 	static HWND fillOrNotCheckBox, parentWnd;
+	static int canvasWidth = 1000, canvasHeight = 600;
 	RECT drawingBrush;
 	RECT rect;
 	static int currentX, currentY;
+	static bool firstPaint = true;
 	switch (message)
 	{
 	case WM_CREATE:
 		hpen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
 		hbrush = CreateSolidBrush(RGB(255, 0, 0));
 		hdc = GetDC(hwnd);
+		
+		SelectObject(hdcInMemory, hbitmap);
 		SelectObject(hdc, hpen);
+		GetClientRect(hwnd, &rect);
 		ReleaseDC(hwnd, hdc);
 	case WM_MOUSEMOVE:
 		parentWnd = GetParent(hwnd);
@@ -50,12 +58,21 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 				break;
 			}
 		}
+		BitBlt(hdcInMemory, 0, 0, canvasWidth, canvasHeight, hdc, 0, 0, SRCCOPY);
 		ReleaseDC(hwnd, hdc);
 		return 0;
 	case WM_PAINT:
+		
 		hdc = BeginPaint(hwnd, &ps);
+		if (firstPaint)
+		{
+			hdcInMemory = CreateCompatibleDC(hdc);
+			hbitmap = CreateCompatibleBitmap(hdc, canvasWidth, canvasHeight);
+			firstPaint = false;
+		}
 		GetClientRect(hwnd, &rect);
 		FillRect(hdc, &rect, (HBRUSH)GetStockObject(WHITE_BRUSH));
+		BitBlt(hdc, 0, 0, canvasWidth, canvasHeight, hdcInMemory, 0, 0, SRCCOPY);
 		EndPaint(hwnd, &ps);
 		return 0;
 	case WM_LBUTTONDOWN:
@@ -63,6 +80,7 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 		currentY = HIWORD(lparam);
 		return 0;
 	case WM_LBUTTONUP:
+		SelectObject(hdcInMemory, hbitmap);
 		hdc = GetDC(hwnd);
 		if (fillOrNot)
 		{
@@ -88,6 +106,7 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 		case 3:
 			break;
 		}
+		BitBlt(hdcInMemory, 0, 0, canvasWidth, canvasHeight, hdc, 0, 0, SRCCOPY);
 		ReleaseDC(hwnd, hdc);
 		return 0;
 	case WM_SENDCOLORBRUSH:
@@ -128,6 +147,9 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 			brushSize > 1 ? brushSize-- : brushSize = 1;
 			break;
 		}
+		return 0;
+	case WM_DESTROY:
+		DeleteObject(hdcInMemory);
 		return 0;
 	}
 	return DefWindowProc(hwnd, message, wparam, lparam);
