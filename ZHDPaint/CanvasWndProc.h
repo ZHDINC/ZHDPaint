@@ -22,16 +22,16 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 	RECT rect;
 	static int currentX, currentY;
 	static bool firstPaint = true;
+	char filestring[256];
+	OPENFILENAME ofn, sfn;
+	bool loadFileResult, saveFileResult;
 	switch (message)
 	{
 	case WM_CREATE:
 		hpen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
 		hbrush = CreateSolidBrush(RGB(255, 0, 0));
 		hdc = GetDC(hwnd);
-		
-		SelectObject(hdcInMemory, hbitmap);
 		SelectObject(hdc, hpen);
-		GetClientRect(hwnd, &rect);
 		ReleaseDC(hwnd, hdc);
 	case WM_MOUSEMOVE:
 		parentWnd = GetParent(hwnd);
@@ -64,14 +64,14 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 	case WM_PAINT:
 		
 		hdc = BeginPaint(hwnd, &ps);
+		GetClientRect(hwnd, &rect);
+		FillRect(hdc, &rect, (HBRUSH)GetStockObject(WHITE_BRUSH));
 		if (firstPaint)
 		{
 			hdcInMemory = CreateCompatibleDC(hdc);
 			hbitmap = CreateCompatibleBitmap(hdc, canvasWidth, canvasHeight);
 			firstPaint = false;
 		}
-		GetClientRect(hwnd, &rect);
-		FillRect(hdc, &rect, (HBRUSH)GetStockObject(WHITE_BRUSH));
 		BitBlt(hdc, 0, 0, canvasWidth, canvasHeight, hdcInMemory, 0, 0, SRCCOPY);
 		EndPaint(hwnd, &ps);
 		return 0;
@@ -145,6 +145,37 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 			break;
 		case BTN_DECREASESIZE:
 			brushSize > 1 ? brushSize-- : brushSize = 1;
+			break;
+		case BTN_LOAD:
+			ofn = { };
+			ofn.lStructSize = sizeof(OPENFILENAME);
+			ofn.hwndOwner = hwnd;
+			ofn.lpstrFile = (LPWSTR)filestring;
+			ofn.lpstrFile[0] = '\0';
+			ofn.nMaxFile = sizeof(filestring);
+			ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+			loadFileResult = GetOpenFileName(&ofn);
+			if (loadFileResult)
+			{
+				hdc = GetDC(hwnd);
+				SelectObject(hdcInMemory, (HBITMAP)LoadImage(nullptr, ofn.lpstrFile, IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE));
+				BitBlt(hdc, 0, 0, canvasWidth, canvasHeight, hdcInMemory, 0, 0, SRCCOPY);
+				ReleaseDC(hwnd, hdc);
+			}
+			break;
+		case BTN_SAVE:
+			sfn = { };
+			sfn.lStructSize = sizeof(OPENFILENAME);
+			sfn.hwndOwner = hwnd;
+			sfn.lpstrFile = (LPWSTR)filestring;
+			sfn.lpstrFile[0] = '\0';
+			sfn.nMaxFile = sizeof(filestring);
+			saveFileResult = GetSaveFileName(&sfn);
+			if (saveFileResult)
+			{
+				// HANDLE hFile = CreateFile(ofn.lpstrFile, GENERIC_READ | GENERIC_WRITE, 0, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
+				
+			}
 			break;
 		}
 		return 0;

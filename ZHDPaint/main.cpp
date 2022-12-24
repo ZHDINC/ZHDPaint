@@ -86,6 +86,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		hwndXSize = CreateWindow(L"EDIT", nullptr, WS_CHILD | WS_VISIBLE | ES_LEFT | ES_NUMBER, 800, 40, 50, 20, hwnd, (HMENU)ES_XSIZE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
 		hwndYSize = CreateWindow(L"EDIT", nullptr, WS_CHILD | WS_VISIBLE | ES_LEFT | ES_NUMBER, 870, 40, 50, 20, hwnd, (HMENU)ES_YSIZE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
 		CreateWindow(L"BUTTON", L"Resize", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 920, 40, 50, 20, hwnd, (HMENU)BTN_RESIZE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
+		CreateWindow(L"BUTTON", L"Load", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 1000, 20, 50, 20, hwnd, (HMENU)BTN_LOAD, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
+		CreateWindow(L"BUTTON", L"Save", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 1050, 20, 50, 20, hwnd, (HMENU)BTN_SAVE, ((LPCREATESTRUCT)lparam)->hInstance, nullptr);
 		coordinatesRect = { 800, 20, 800 + 100, 20 + 20 };
 		return 0;
 	case WM_PAINT:
