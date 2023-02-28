@@ -6,6 +6,7 @@ ColorPalette::ColorPalette()
 	AddToColorPalette(RGB(255, 0, 0));
 	AddToColorPalette(RGB(0, 255, 0));
 	AddToColorPalette(RGB(0, 0, 255));
+	SetLastColor(colors[0].GetPaletteBrush());
 }
 
 void ColorPalette::DrawColorPalette(HDC hdc)

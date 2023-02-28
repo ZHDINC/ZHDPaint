@@ -102,6 +102,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	case WM_SENDCOLORBRUSH:
 		CanvasWndProc(hwndCanvas, message, wparam, lparam);
 		return 0;
+	case WM_GETCOLORBRUSH:
+		ColorPaletteWndProc(hwndColorPalette, message, wparam, lparam);
+		return 0;
 	case WM_MOUSEMOVE:
 		if (wparam & MK_LBUTTON)
 		{

@@ -49,7 +49,10 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 				drawingBrush.top = p.y;
 				drawingBrush.right = p.x + brushSize;
 				drawingBrush.bottom = p.y + brushSize;
-				FillRect(hdc, &drawingBrush, hbrush);
+				SelectObject(hdc, hpen);
+				SelectObject(hdc, hbrush);
+				//FillRect(hdc, &drawingBrush, hbrush);
+				Rectangle(hdc, drawingBrush.left, drawingBrush.top, drawingBrush.right, drawingBrush.bottom);
 				break;
 			case 4:
 				SelectObject(hdc, hpen);
@@ -142,6 +145,7 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 
 		case BTN_INCREASESIZE:
 			brushSize++;
+			
 			break;
 		case BTN_DECREASESIZE:
 			brushSize > 1 ? brushSize-- : brushSize = 1;
@@ -178,6 +182,7 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 			}
 			break;
 		}
+		SendMessage(GetParent(hwnd), WM_GETCOLORBRUSH, 0, 0);
 		return 0;
 	case WM_DESTROY:
 		DeleteObject(hdcInMemory);

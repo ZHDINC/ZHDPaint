@@ -8,6 +8,7 @@ class ColorPalette
 {
 	std::vector<PaletteBrush> colors;
 	std::vector<POINT> points;
+	COLORREF lastcolor;
 	int iteration = 0, row = 0, column = 0;
 public:
 	ColorPalette();
@@ -21,6 +22,14 @@ public:
 	{
 		return colors[i].GetPaletteBrush();
 	}
+	void SetLastColor(COLORREF colorref)
+	{
+		lastcolor = colorref;
+	}
+	COLORREF GetLastColor()
+	{
+		return lastcolor;
+	}
 	PaletteBrush HitCheck(LPARAM lparam)
 	{
 		int x = LOWORD(lparam);
@@ -32,6 +41,7 @@ public:
 			{
 				if (y > p.y && y < (p.y + 33))
 				{
+					SetLastColor(colors[loopiterator].GetPaletteBrush());
 					return colors[loopiterator];
 				}
 			}

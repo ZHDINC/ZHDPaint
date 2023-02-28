@@ -37,6 +37,8 @@ LRESULT CALLBACK ColorPaletteWndProc(HWND hwnd, UINT message, WPARAM wparam, LPA
 		SendMessage(parentWnd, WM_SENDCOLORBRUSH, 0, colorpalette.HitCheck(lparam).GetPaletteBrush());
 		return 0;
 	case WM_GETCOLORBRUSH:
+		parentWnd = GetParent(hwnd);
+		SendMessage(parentWnd, WM_SENDCOLORBRUSH, 0, colorpalette.GetLastColor());
 		return 0;
 	case WM_DESTROY:
 		PostQuitMessage(0);
