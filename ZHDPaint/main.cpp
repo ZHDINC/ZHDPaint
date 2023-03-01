@@ -63,13 +63,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	PAINTSTRUCT ps;
 	static int canvasX = 0, canvasY = 0, canvasWidth = 1000, canvasHeight = 600, newWidth = 0, newHeight = 0;
 	static RECT coordinatesRect;
-	static std::wstring coordinatesString;
+	static std::wstring coordinatesString, brushsizeString;
 	static RECT canvasRect;
 	static bool newSize = false;
 	wchar_t sXBuffer[20], sYBuffer[20];
 	int countXBuffer, countYBuffer;
 	std::wstring textXSize, textYSize;
 	LPARAM resizingLparam;
+	RECT invalidatorRect;
 	switch (message)
 	{
 	case WM_CREATE:
@@ -97,6 +98,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		TextOut(hdc, 800, 20, coordinatesString.c_str(), coordinatesString.size());
 		TextOut(hdc, 780, 40, L"X:", 2);
 		TextOut(hdc, 850, 40, L"Y:", 2);
+		TextOut(hdc, 300, 80, brushsizeString.c_str(), brushsizeString.size());
 		EndPaint(hwnd ,&ps);
 		return 0;
 	case WM_SENDCOLORBRUSH:
@@ -104,6 +106,11 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		return 0;
 	case WM_GETCOLORBRUSH:
 		ColorPaletteWndProc(hwndColorPalette, message, wparam, lparam);
+		return 0;
+	case WM_BRUSHSIZECHANGE:
+		brushsizeString = L"Brush size: " + std::to_wstring(lparam);
+		invalidatorRect = { 300, 80, 400, 100 };
+		InvalidateRect(hwnd, &invalidatorRect, TRUE);
 		return 0;
 	case WM_MOUSEMOVE:
 		if (wparam & MK_LBUTTON)

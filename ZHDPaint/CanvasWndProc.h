@@ -33,6 +33,8 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 		hdc = GetDC(hwnd);
 		SelectObject(hdc, hpen);
 		ReleaseDC(hwnd, hdc);
+		SendMessage(GetParent(hwnd), WM_BRUSHSIZECHANGE, 0, brushSize);
+		return 0;
 	case WM_MOUSEMOVE:
 		parentWnd = GetParent(hwnd);
 		SendMessage(parentWnd, WM_CANVASMOVE, 0, lparam);
@@ -51,7 +53,6 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 				drawingBrush.bottom = p.y + brushSize;
 				SelectObject(hdc, hpen);
 				SelectObject(hdc, hbrush);
-				//FillRect(hdc, &drawingBrush, hbrush);
 				Rectangle(hdc, drawingBrush.left, drawingBrush.top, drawingBrush.right, drawingBrush.bottom);
 				break;
 			case 4:
@@ -145,10 +146,11 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 
 		case BTN_INCREASESIZE:
 			brushSize++;
-			
+			SendMessage(GetParent(hwnd), WM_BRUSHSIZECHANGE, 0, brushSize);
 			break;
 		case BTN_DECREASESIZE:
 			brushSize > 1 ? brushSize-- : brushSize = 1;
+			SendMessage(GetParent(hwnd), WM_BRUSHSIZECHANGE, 0, brushSize);
 			break;
 		case BTN_LOAD:
 			ofn = { };
