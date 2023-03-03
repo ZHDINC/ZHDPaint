@@ -16,15 +16,12 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 	static int currentTool = 0;
 	static bool fillOrNot = false;
 	static int brushSize = 1;
-	static HWND fillOrNotCheckBox, parentWnd;
+	static HWND fillOrNotCheckBox;
 	static int canvasWidth = 1000, canvasHeight = 600;
 	RECT drawingBrush;
 	RECT rect;
 	static int currentX, currentY;
 	static bool firstPaint = true;
-	char filestring[256];
-	OPENFILENAME ofn, sfn;
-	bool loadFileResult, saveFileResult;
 	switch (message)
 	{
 	case WM_CREATE:
@@ -36,8 +33,7 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 		SendMessage(GetParent(hwnd), WM_BRUSHSIZECHANGE, 0, brushSize);
 		return 0;
 	case WM_MOUSEMOVE:
-		parentWnd = GetParent(hwnd);
-		SendMessage(parentWnd, WM_CANVASMOVE, 0, lparam);
+		SendMessage(GetParent(hwnd), WM_CANVASMOVE, 0, lparam);
 		if (!drawing) return 0;
 		hdc = GetDC(hwnd);
 		if (wparam & MK_LBUTTON)
@@ -66,7 +62,6 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 		ReleaseDC(hwnd, hdc);
 		return 0;
 	case WM_PAINT:
-		
 		hdc = BeginPaint(hwnd, &ps);
 		GetClientRect(hwnd, &rect);
 		FillRect(hdc, &rect, (HBRUSH)GetStockObject(WHITE_BRUSH));
@@ -106,8 +101,6 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 			break;
 		case 2:
 			Ellipse(hdc, currentX, currentY, LOWORD(lparam), HIWORD(lparam));
-			break;
-		case 3:
 			break;
 		}
 		BitBlt(hdcInMemory, 0, 0, canvasWidth, canvasHeight, hdc, 0, 0, SRCCOPY);
@@ -153,36 +146,42 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 			SendMessage(GetParent(hwnd), WM_BRUSHSIZECHANGE, 0, brushSize);
 			break;
 		case BTN_LOAD:
-			ofn = { };
-			ofn.lStructSize = sizeof(OPENFILENAME);
-			ofn.hwndOwner = hwnd;
-			ofn.lpstrFile = (LPWSTR)filestring;
-			ofn.lpstrFile[0] = '\0';
-			ofn.nMaxFile = sizeof(filestring);
-			ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
-			loadFileResult = GetOpenFileName(&ofn);
-			if (loadFileResult)
 			{
-				hdc = GetDC(hwnd);
-				SelectObject(hdcInMemory, (HBITMAP)LoadImage(nullptr, ofn.lpstrFile, IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE));
-				BitBlt(hdc, 0, 0, canvasWidth, canvasHeight, hdcInMemory, 0, 0, SRCCOPY);
-				ReleaseDC(hwnd, hdc);
+				char filestring[256];
+				OPENFILENAME ofn = { };
+				ofn.lStructSize = sizeof(OPENFILENAME);
+				ofn.hwndOwner = hwnd;
+				ofn.lpstrFile = (LPWSTR)filestring;
+				ofn.lpstrFile[0] = '\0';
+				ofn.nMaxFile = sizeof(filestring);
+				ofn.Flags = OFN_FILEMUSTEXIST | OFN_PATHMUSTEXIST;
+				bool loadFileResult = GetOpenFileName(&ofn);
+				if (loadFileResult)
+				{
+					hdc = GetDC(hwnd);
+					SelectObject(hdcInMemory, (HBITMAP)LoadImage(nullptr, ofn.lpstrFile, IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE));
+					BitBlt(hdc, 0, 0, canvasWidth, canvasHeight, hdcInMemory, 0, 0, SRCCOPY);
+					ReleaseDC(hwnd, hdc);
+				}
+				break;
 			}
-			break;
 		case BTN_SAVE:
-			sfn = { };
-			sfn.lStructSize = sizeof(OPENFILENAME);
-			sfn.hwndOwner = hwnd;
-			sfn.lpstrFile = (LPWSTR)filestring;
-			sfn.lpstrFile[0] = '\0';
-			sfn.nMaxFile = sizeof(filestring);
-			saveFileResult = GetSaveFileName(&sfn);
-			if (saveFileResult)
 			{
-				// HANDLE hFile = CreateFile(ofn.lpstrFile, GENERIC_READ | GENERIC_WRITE, 0, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
-				
+				char filestring[256];
+				OPENFILENAME sfn = { };
+				sfn.lStructSize = sizeof(OPENFILENAME);
+				sfn.hwndOwner = hwnd;
+				sfn.lpstrFile = (LPWSTR)filestring;
+				sfn.lpstrFile[0] = '\0';
+				sfn.nMaxFile = sizeof(filestring);
+				bool saveFileResult = GetSaveFileName(&sfn);
+				if (saveFileResult)
+				{
+					// HANDLE hFile = CreateFile(ofn.lpstrFile, GENERIC_READ | GENERIC_WRITE, 0, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, nullptr);
+
+				}
+				break;
 			}
-			break;
 		}
 		SendMessage(GetParent(hwnd), WM_GETCOLORBRUSH, 0, 0);
 		return 0;

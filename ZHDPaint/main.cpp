@@ -66,11 +66,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 	static std::wstring coordinatesString, brushsizeString;
 	static RECT canvasRect;
 	static bool newSize = false;
-	wchar_t sXBuffer[20], sYBuffer[20];
-	int countXBuffer, countYBuffer;
-	std::wstring textXSize, textYSize;
-	LPARAM resizingLparam;
-	RECT invalidatorRect;
 	switch (message)
 	{
 	case WM_CREATE:
@@ -108,10 +103,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		ColorPaletteWndProc(hwndColorPalette, message, wparam, lparam);
 		return 0;
 	case WM_BRUSHSIZECHANGE:
+	{
 		brushsizeString = L"Brush size: " + std::to_wstring(lparam);
-		invalidatorRect = { 300, 80, 400, 100 };
+		RECT invalidatorRect = { 300, 80, 400, 100 };
 		InvalidateRect(hwnd, &invalidatorRect, TRUE);
 		return 0;
+	}
 	case WM_MOUSEMOVE:
 		if (wparam & MK_LBUTTON)
 		{
@@ -138,10 +135,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		InvalidateRect(hwnd, &coordinatesRect, true);
 		return 0;
 	case WM_COMMAND:
+	{
+		wchar_t sXBuffer[20], sYBuffer[20];
+		std::wstring textXSize, textYSize;
 		if (wparam == BTN_RESIZE)
 		{
-			countXBuffer = SendMessage(hwndXSize, EM_GETLINE, 0, (LPARAM)sXBuffer);
-			countYBuffer = SendMessage(hwndYSize, EM_GETLINE, 0, (LPARAM)sYBuffer);
+			int countXBuffer = SendMessage(hwndXSize, EM_GETLINE, 0, (LPARAM)sXBuffer);
+			int countYBuffer = SendMessage(hwndYSize, EM_GETLINE, 0, (LPARAM)sYBuffer);
 			if (countXBuffer && countYBuffer)
 			{
 				for (int i = 0; i < countXBuffer; i++)
@@ -170,6 +170,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 		}
 		CanvasWndProc(hwndCanvas, message, wparam, lparam);
 		return 0;
+	}
 	case WM_DESTROY:
 		PostQuitMessage(0);
 		return 0;
