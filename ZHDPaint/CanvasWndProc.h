@@ -5,8 +5,10 @@
 LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
 	static HDC hdcInMemory;
-	static HPEN hpen;
-	static HBRUSH hbrush;
+	HPEN hpen;
+	HBRUSH hbrush;
+	static int penStyle;
+	static COLORREF currentColor;
 	static HBITMAP hbitmap;
 	BITMAP bitmap;
 	HDC hdc;
@@ -20,16 +22,14 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 	static int canvasWidth = 1000, canvasHeight = 600;
 	RECT drawingBrush;
 	RECT rect;
+	static RECT oldRect;
 	static int currentX, currentY;
 	static bool firstPaint = true;
 	switch (message)
 	{
 	case WM_CREATE:
-		hpen = CreatePen(PS_SOLID, 1, RGB(255, 0, 0));
-		hbrush = CreateSolidBrush(RGB(255, 0, 0));
-		hdc = GetDC(hwnd);
-		SelectObject(hdc, hpen);
-		ReleaseDC(hwnd, hdc);
+		GetClientRect(hwnd, &oldRect);
+		currentColor = RGB(255, 0, 0);
 		SendMessage(GetParent(hwnd), WM_BRUSHSIZECHANGE, 0, brushSize);
 		return 0;
 	case WM_MOUSEMOVE:
@@ -40,6 +40,10 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 		{
 			p.x = LOWORD(lparam);
 			p.y = HIWORD(lparam);
+			hpen = CreatePen(penStyle, brushSize, currentColor);
+			hbrush = CreateSolidBrush(currentColor);
+			SelectObject(hdc, hpen);
+			SelectObject(hdc, hbrush);
 			switch (currentTool)
 			{
 			case 3:
@@ -47,28 +51,43 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 				drawingBrush.top = p.y;
 				drawingBrush.right = p.x + brushSize;
 				drawingBrush.bottom = p.y + brushSize;
-				SelectObject(hdc, hpen);
-				SelectObject(hdc, hbrush);
 				Rectangle(hdc, drawingBrush.left, drawingBrush.top, drawingBrush.right, drawingBrush.bottom);
 				break;
 			case 4:
-				SelectObject(hdc, hpen);
-				SelectObject(hdc, hbrush);
 				Ellipse(hdc, p.x, p.y, p.x + brushSize + 1, p.y + brushSize + 1);
 				break;
 			}
+			DeleteObject(hpen);
+			DeleteObject(hbrush);
 		}
 		BitBlt(hdcInMemory, 0, 0, canvasWidth, canvasHeight, hdc, 0, 0, SRCCOPY);
+		
+		ReleaseDC(hwnd, hdc);
+		return 0;
+	case WM_SIZE:
+		canvasWidth = LOWORD(lparam);
+		canvasHeight = HIWORD(lparam);
+		hdc = GetDC(hwnd);
+		GetClientRect(hwnd, &rect);
+		if (oldRect.bottom != rect.bottom || oldRect.right != rect.right)
+		{
+			InvalidateRect(hwnd, &rect, TRUE);
+			hbitmap = CreateCompatibleBitmap(hdc, canvasWidth, canvasHeight);
+			BitBlt(hdcInMemory, 0, 0, canvasWidth, canvasHeight, hdc, 0, 0, SRCCOPY);
+			oldRect = rect;
+		}
 		ReleaseDC(hwnd, hdc);
 		return 0;
 	case WM_PAINT:
 		hdc = BeginPaint(hwnd, &ps);
+		BitBlt(hdcInMemory, 0, 0, canvasWidth, canvasHeight, hdc, 0, 0, SRCCOPY);
 		GetClientRect(hwnd, &rect);
 		FillRect(hdc, &rect, (HBRUSH)GetStockObject(WHITE_BRUSH));
 		if (firstPaint)
 		{
 			hdcInMemory = CreateCompatibleDC(hdc);
 			hbitmap = CreateCompatibleBitmap(hdc, canvasWidth, canvasHeight);
+			BitBlt(hdcInMemory, 0, 0, canvasWidth, canvasHeight, hdc, 0, 0, SRCCOPY);
 			firstPaint = false;
 		}
 		BitBlt(hdc, 0, 0, canvasWidth, canvasHeight, hdcInMemory, 0, 0, SRCCOPY);
@@ -90,6 +109,7 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 			SelectObject(hdc, GetStockObject(NULL_BRUSH));
 		}
 		MoveToEx(hdc, currentX, currentY, nullptr);
+		hpen = CreatePen(penStyle, brushSize, currentColor);
 		SelectObject(hdc, hpen);
 		switch (currentTool)
 		{
@@ -104,11 +124,11 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 			break;
 		}
 		BitBlt(hdcInMemory, 0, 0, canvasWidth, canvasHeight, hdc, 0, 0, SRCCOPY);
+		DeleteObject(hpen);
 		ReleaseDC(hwnd, hdc);
 		return 0;
 	case WM_SENDCOLORBRUSH:
-		hpen = CreatePen(PS_SOLID, brushSize, lparam);
-		hbrush = CreateSolidBrush(lparam);
+		currentColor = lparam;
 		return 0;
 	case WM_COMMAND:
 		switch (LOWORD(wparam))
