@@ -58,8 +58,6 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 		return 0;
 	case WM_PAINT:
 		hdc = BeginPaint(hwnd, &ps);
-		GetClientRect(hwnd, &rect);
-		FillRect(hdc, &rect, (HBRUSH)GetStockObject(WHITE_BRUSH));
 		listOfGDIObjectsToDraw.runDrawingOperations(hdc);
 		EndPaint(hwnd, &ps);
 		return 0;

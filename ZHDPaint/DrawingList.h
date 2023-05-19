@@ -19,6 +19,7 @@ struct PointsAndFunction
 class DrawingList
 {
 	HPEN hpen;
+	HBRUSH hbrush;
 	std::vector<PointsAndFunction> list;
 public:
 	DrawingList() { };
@@ -31,7 +32,9 @@ public:
 		for (PointsAndFunction p : list)
 		{
 			hpen = CreatePen(PS_SOLID, 1, p.color);
+			hbrush = CreateSolidBrush(p.color);
 			SelectObject(hdc, hpen);
+			SelectObject(hdc, hbrush);
 			switch (p.function)
 			{
 			case 0:
@@ -51,6 +54,7 @@ public:
 				Ellipse(hdc, p.p1.x, p.p1.y, p.p2.x, p.p2.y);
 				break;
 			}
+			DeleteObject(hbrush);
 			DeleteObject(hpen);
 		}
 	}

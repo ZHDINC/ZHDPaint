@@ -38,6 +38,7 @@ int WINAPI WinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _
 	canvasWndclass.lpszClassName = L"Canvas";
 	canvasWndclass.lpfnWndProc = CanvasWndProc;
 	canvasWndclass.hIcon = nullptr;
+	canvasWndclass.hbrBackground = (HBRUSH)GetStockObject(WHITE_BRUSH);
 
 	RegisterClass(&canvasWndclass);
 
