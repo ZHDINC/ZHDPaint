@@ -146,6 +146,7 @@
     <ClInclude Include="CanvasWndProc.h" />
     <ClInclude Include="ColorPalette.h" />
     <ClInclude Include="ColorPaletteWndProc.h" />
+    <ClInclude Include="DrawingList.h" />
     <ClInclude Include="Identifiers.h" />
     <ClInclude Include="PaletteBrush.h" />
   </ItemGroup>

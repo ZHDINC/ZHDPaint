@@ -1,16 +1,15 @@
 #pragma once
 #include<Windows.h>
+#include"DrawingList.h"
 #include"Identifiers.h"
 
 LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lparam)
 {
-	static HDC hdcInMemory;
+	static DrawingList listOfGDIObjectsToDraw;
 	HPEN hpen;
 	HBRUSH hbrush;
 	static int penStyle;
 	static COLORREF currentColor;
-	static HBITMAP hbitmap;
-	BITMAP bitmap;
 	HDC hdc;
 	PAINTSTRUCT ps;
 	static bool drawing = false;
@@ -22,75 +21,46 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 	static int canvasWidth = 1000, canvasHeight = 600;
 	RECT drawingBrush;
 	RECT rect;
-	static RECT oldRect;
 	static int currentX, currentY;
 	static bool firstPaint = true;
 	switch (message)
 	{
 	case WM_CREATE:
-		GetClientRect(hwnd, &oldRect);
 		currentColor = RGB(255, 0, 0);
 		SendMessage(GetParent(hwnd), WM_BRUSHSIZECHANGE, 0, brushSize);
 		return 0;
 	case WM_MOUSEMOVE:
 		SendMessage(GetParent(hwnd), WM_CANVASMOVE, 0, lparam);
 		if (!drawing) return 0;
-		hdc = GetDC(hwnd);
 		if (wparam & MK_LBUTTON)
 		{
 			p.x = LOWORD(lparam);
 			p.y = HIWORD(lparam);
-			hpen = CreatePen(penStyle, brushSize, currentColor);
-			hbrush = CreateSolidBrush(currentColor);
-			SelectObject(hdc, hpen);
-			SelectObject(hdc, hbrush);
+			drawingBrush.left = p.x;
+			drawingBrush.top = p.y;
+			drawingBrush.right = p.x + brushSize;
+			drawingBrush.bottom = p.y + brushSize;
 			switch (currentTool)
 			{
 			case 3:
-				drawingBrush.left = p.x;
-				drawingBrush.top = p.y;
-				drawingBrush.right = p.x + brushSize;
-				drawingBrush.bottom = p.y + brushSize;
-				Rectangle(hdc, drawingBrush.left, drawingBrush.top, drawingBrush.right, drawingBrush.bottom);
+				listOfGDIObjectsToDraw.addDrawingOperation(drawingBrush.left, drawingBrush.top, drawingBrush.right, drawingBrush.bottom, 3, currentColor);
 				break;
 			case 4:
-				Ellipse(hdc, p.x, p.y, p.x + brushSize + 1, p.y + brushSize + 1);
+				listOfGDIObjectsToDraw.addDrawingOperation(drawingBrush.left, drawingBrush.top, drawingBrush.right, drawingBrush.bottom, 4, currentColor);
 				break;
 			}
-			DeleteObject(hpen);
-			DeleteObject(hbrush);
+			InvalidateRect(hwnd, 0, FALSE);
 		}
-		BitBlt(hdcInMemory, 0, 0, canvasWidth, canvasHeight, hdc, 0, 0, SRCCOPY);
-		
-		ReleaseDC(hwnd, hdc);
 		return 0;
 	case WM_SIZE:
 		canvasWidth = LOWORD(lparam);
 		canvasHeight = HIWORD(lparam);
-		hdc = GetDC(hwnd);
-		GetClientRect(hwnd, &rect);
-		if (oldRect.bottom != rect.bottom || oldRect.right != rect.right)
-		{
-			InvalidateRect(hwnd, &rect, TRUE);
-			hbitmap = CreateCompatibleBitmap(hdc, canvasWidth, canvasHeight);
-			BitBlt(hdcInMemory, 0, 0, canvasWidth, canvasHeight, hdc, 0, 0, SRCCOPY);
-			oldRect = rect;
-		}
-		ReleaseDC(hwnd, hdc);
 		return 0;
 	case WM_PAINT:
 		hdc = BeginPaint(hwnd, &ps);
-		BitBlt(hdcInMemory, 0, 0, canvasWidth, canvasHeight, hdc, 0, 0, SRCCOPY);
 		GetClientRect(hwnd, &rect);
 		FillRect(hdc, &rect, (HBRUSH)GetStockObject(WHITE_BRUSH));
-		if (firstPaint)
-		{
-			hdcInMemory = CreateCompatibleDC(hdc);
-			hbitmap = CreateCompatibleBitmap(hdc, canvasWidth, canvasHeight);
-			BitBlt(hdcInMemory, 0, 0, canvasWidth, canvasHeight, hdc, 0, 0, SRCCOPY);
-			firstPaint = false;
-		}
-		BitBlt(hdc, 0, 0, canvasWidth, canvasHeight, hdcInMemory, 0, 0, SRCCOPY);
+		listOfGDIObjectsToDraw.runDrawingOperations(hdc);
 		EndPaint(hwnd, &ps);
 		return 0;
 	case WM_LBUTTONDOWN:
@@ -98,7 +68,6 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 		currentY = HIWORD(lparam);
 		return 0;
 	case WM_LBUTTONUP:
-		SelectObject(hdcInMemory, hbitmap);
 		hdc = GetDC(hwnd);
 		if (fillOrNot)
 		{
@@ -108,23 +77,19 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 		{
 			SelectObject(hdc, GetStockObject(NULL_BRUSH));
 		}
-		MoveToEx(hdc, currentX, currentY, nullptr);
-		hpen = CreatePen(penStyle, brushSize, currentColor);
-		SelectObject(hdc, hpen);
 		switch (currentTool)
 		{
 		case 0:
-			LineTo(hdc, LOWORD(lparam), HIWORD(lparam));
+			listOfGDIObjectsToDraw.addDrawingOperation(currentX, currentY, LOWORD(lparam), HIWORD(lparam), 0, currentColor);
 			break;
 		case 1:
-			Rectangle(hdc, currentX, currentY, LOWORD(lparam), HIWORD(lparam));
+			listOfGDIObjectsToDraw.addDrawingOperation(currentX, currentY, LOWORD(lparam), HIWORD(lparam), 1, currentColor);
 			break;
 		case 2:
-			Ellipse(hdc, currentX, currentY, LOWORD(lparam), HIWORD(lparam));
+			listOfGDIObjectsToDraw.addDrawingOperation(currentX, currentY, LOWORD(lparam), HIWORD(lparam), 2, currentColor);
 			break;
 		}
-		BitBlt(hdcInMemory, 0, 0, canvasWidth, canvasHeight, hdc, 0, 0, SRCCOPY);
-		DeleteObject(hpen);
+		InvalidateRect(hwnd, 0, FALSE);
 		ReleaseDC(hwnd, hdc);
 		return 0;
 	case WM_SENDCOLORBRUSH:
@@ -178,10 +143,7 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 				bool loadFileResult = GetOpenFileName(&ofn);
 				if (loadFileResult)
 				{
-					hdc = GetDC(hwnd);
-					SelectObject(hdcInMemory, (HBITMAP)LoadImage(nullptr, ofn.lpstrFile, IMAGE_BITMAP, 0, 0, LR_DEFAULTSIZE | LR_LOADFROMFILE));
-					BitBlt(hdc, 0, 0, canvasWidth, canvasHeight, hdcInMemory, 0, 0, SRCCOPY);
-					ReleaseDC(hwnd, hdc);
+					
 				}
 				break;
 			}
@@ -206,7 +168,6 @@ LRESULT CALLBACK CanvasWndProc(HWND hwnd, UINT message, WPARAM wparam, LPARAM lp
 		SendMessage(GetParent(hwnd), WM_GETCOLORBRUSH, 0, 0);
 		return 0;
 	case WM_DESTROY:
-		DeleteObject(hdcInMemory);
 		return 0;
 	}
 	return DefWindowProc(hwnd, message, wparam, lparam);
